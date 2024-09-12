@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/OCLMP.dir/src/main.cpp.o CMakeFiles/OCLMP.dir/src/types.cpp.o -o OCLMP  /usr/lib/x86_64-linux-gnu/libOpenCL.so -lgmp 
