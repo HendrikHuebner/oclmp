@@ -71,10 +71,10 @@ struct oclmp_env {
     }
 };
 
-void load_oclmp(oclmp_env& env, oclmp_t& a);
+void load_oclmp(oclmp_env& env, oclmp& a);
 
-void fetch_oclmp(oclmp_env& env, oclmp_t& a);
+void fetch_oclmp(oclmp_env& env, oclmp& a);
 
-void clear_oclmp(oclmp_env& env, oclmp_t& a);
+void clear_oclmp(oclmp_env& env, oclmp& a);
 
-void oclmp_bitwise_or(oclmp_env ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c);
+void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);

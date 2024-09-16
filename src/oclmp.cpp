@@ -37,7 +37,7 @@ cl_program ocl_manager::build_program(std::string filename) {
     return program;
 }
 
-void load_oclmp(oclmp_env& env, oclmp_t& a) {
+void load_oclmp(oclmp_env& env, oclmp& a) {
     cl_int err;
 
     if (!a.cl_buf) {
@@ -57,7 +57,7 @@ void load_oclmp(oclmp_env& env, oclmp_t& a) {
     err = clEnqueueWriteBuffer(env.ocl_manager.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
 }
 
-void fetch_oclmp(oclmp_env& env, oclmp_t& a) {
+void fetch_oclmp(oclmp_env& env, oclmp& a) {
     cl_int err;
 
     if (!a.cl_buf) {
@@ -67,10 +67,10 @@ void fetch_oclmp(oclmp_env& env, oclmp_t& a) {
     clEnqueueReadBuffer(env.ocl_manager.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
 }
 
-void clear_oclmp(oclmp_env& env, oclmp_t& a) {
+void clear_oclmp(oclmp_env& env, oclmp& a) {
 
     delete[] a.data;
-    
+
     if (!a.cl_buf) {
         return;
     }
@@ -81,7 +81,7 @@ void clear_oclmp(oclmp_env& env, oclmp_t& a) {
     }
 }
 
-void oclmp_bitwise_or(oclmp_env ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c) {
+void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
     cl_command_queue queue = clCreateCommandQueueWithProperties(ctx.ocl_manager.ctx, ctx.ocl_manager.dev, 0, nullptr);
     cl_kernel kernel = ctx.getKernel("");
 

@@ -3,7 +3,7 @@
 #include "types.hpp"
 #include <gtest/gtest.h>
 
-inline bool oclmp_equal(oclmp_t x, oclmp_t e) {
+inline bool oclmp_equal(oclmp x, oclmp e) {
     if (x.size != e.size)
         return false;
 

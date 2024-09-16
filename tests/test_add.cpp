@@ -8,9 +8,9 @@ TEST(OCLMPTest, AddTest) {
     const char* num1_str = "123456789";
     const char* num2_str = "987655432";
     size_t prec = 4;
-    oclmp_t a = parse_oclmp(num1_str, prec);
-    oclmp_t b = parse_oclmp(num2_str, prec);
-    oclmp_t c = alloc_oclmp(prec);
+    oclmp a = parse_oclmp(num1_str, prec);
+    oclmp b = parse_oclmp(num2_str, prec);
+    oclmp c = alloc_oclmp(prec);
 
     mpz_t gmp_a, gmp_b, gmp_c;
     mpz_init(gmp_a);
@@ -22,7 +22,7 @@ TEST(OCLMPTest, AddTest) {
     mpz_ior(gmp_c, gmp_a, gmp_b);
     
     gmp_printf ("gmp %Zd\n", gmp_c);
-    oclmp_t d = alloc_oclmp(prec);
+    oclmp d = alloc_oclmp(prec);
     gmp_to_oclmp(gmp_c, d);
 
     oclmp_env ctx("../src/opencl");
@@ -31,8 +31,8 @@ TEST(OCLMPTest, AddTest) {
     load_oclmp(ctx.ocl_manager, c);
 
     oclmp_bitwise_or(ctx, a, b, c);
-    print_oclmp_t(c);
-    print_oclmp_t(d);
+    print_oclmp(c);
+    print_oclmp(d);
 
     mpz_clear(gmp_a);
     mpz_clear(gmp_b);

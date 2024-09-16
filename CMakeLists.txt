@@ -27,11 +27,11 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(OCLMP_tests
+add_executable(oclmpests
     tests/test_ops.cpp
 )
 
-target_link_libraries(OCLMP_tests PRIVATE gtest gtest_main OCLMP)
-target_include_directories(OCLMP_tests PUBLIC src)
+target_link_libraries(oclmpests PRIVATE gtest gtest_main OCLMP)
+target_include_directories(oclmpests PUBLIC src)
 
-add_test(NAME OCLMPTests COMMAND OCLMP_tests)
+add_test(NAME OCLMPTests COMMAND oclmpests)

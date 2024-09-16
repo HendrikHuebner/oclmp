@@ -8,7 +8,7 @@
 #include <random>
 #include <gmp.h>
 
-oclmp_t random_oclmp(size_t precision) {
+oclmp random_oclmp(size_t precision) {
     b256int_t* array = new b256int_t[precision];
 
     std::random_device rd;
@@ -27,7 +27,7 @@ oclmp_t random_oclmp(size_t precision) {
     };
 }
 
-void print_oclmp_t(const oclmp_t &num) {
+void print_oclmp(const oclmp &num) {
     printf("Integer part: ");
     for (ssize_t i = num.int_size - 1; i >= 0; i--) {
         printf("%02x ", num.data[i]);
@@ -52,7 +52,7 @@ static void mpzToUcharArray(mpz_t& value, unsigned char* array, size_t size) {
     }
 }
 
-void oclmp_to_gmp(mpz_t& result, oclmp& mp) {
+void oclmpo_gmp(mpz_t& result, oclmp& mp) {
     mpz_t int_part, frac_part;
     mpz_init(int_part);
     mpz_init(frac_part);

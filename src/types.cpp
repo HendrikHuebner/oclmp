@@ -29,7 +29,7 @@ static void add_digit(b256int_t* result, size_t& len, b256int_t digit) {
     }
 }
 
-oclmp_t alloc_oclmp(size_t precision) {
+oclmp alloc_oclmp(size_t precision) {
     b256int_t* data = new b256int_t[precision];
     return {
         .data = data,
@@ -39,7 +39,7 @@ oclmp_t alloc_oclmp(size_t precision) {
     };
 }
 
-oclmp_t parse_oclmp(std::string str, size_t precision) {    
+oclmp parse_oclmp(std::string str, size_t precision) {    
     size_t b10_decimal_point = std::string::npos;
     b256int_t* int_part = new b256int_t[str.length()];
     b256int_t* frac_part = new b256int_t[str.length()];
@@ -98,7 +98,7 @@ oclmp_t parse_oclmp(std::string str, size_t precision) {
     };
 }
 
-oclmp_t parse_oclmp(std::vector<unsigned char>& bytes) {    
+oclmp parse_oclmp(std::vector<unsigned char>& bytes) {    
     return {
         .data = bytes.data(),
         .int_size = bytes.size(),
