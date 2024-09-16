@@ -1,4 +1,4 @@
-# GPU accelerated large number fixed point math
+# GPU accelerated large number fixed point math using OpenCL
 ## TODOs:
 - [x] Bitwise operations (trivial)
 - [x] Addition using carry save 'trick'

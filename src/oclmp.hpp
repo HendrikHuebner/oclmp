@@ -1,11 +1,50 @@
 #pragma once
 
 #include <CL/cl.h>
-#include <cstddef>
-#include <iostream>
-#include <stdexcept>
-#include "ocl_manager.hpp"
+#include <filesystem>
 #include "types.hpp"
+
+
+class OCLManager {
+  public:
+    cl_context ctx;
+    cl_device_id dev;
+    cl_platform_id platform;
+    cl_command_queue queue;
+
+    std::filesystem::path ocl_folder;
+
+    OCLManager(std::string ocl_folder) {
+        cl_int err;
+
+        this->ocl_folder = ocl_folder;
+        if (!std::filesystem::exists(ocl_folder)) { 
+            throw std::invalid_argument("Opencl source directory does not exist.");
+        }
+
+        err = clGetPlatformIDs(1, &platform, nullptr);
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to find an OpenCL platform.");
+        }
+
+        err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &dev, nullptr);
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to find a GPU device.");
+        }
+
+        ctx = clCreateContext(nullptr, 1, &dev, nullptr, nullptr, &err);
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to create OpenCL context.");
+        }
+
+        queue = clCreateCommandQueueWithProperties(ctx, dev, 0, &err);
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to create OpenCL queue.");
+        }
+    }
+
+    cl_program build_program(std::string filename);
+};
 
 struct oclmp_context {
     OCLManager ocl_manager;
@@ -32,69 +71,10 @@ struct oclmp_context {
     }
 };
 
-void load_oclmp(OCLManager& m, oclmp_t& a) {
-    cl_int err;
+void load_oclmp(OCLManager& m, oclmp_t& a);
 
-    if (!a.cl_buf) {
-        cl_mem buf = clCreateBuffer(m.ctx, CL_MEM_READ_WRITE, 
-            (a.frac_size + a.int_size) * sizeof(b256int_t), a.data, &err);
+void fetch_oclmp(OCLManager& m, oclmp_t& a);
 
-        if (err != CL_SUCCESS) {
-            throw std::runtime_error("Failed to create oclmp buffer on GPU.");
-        }
+void clear_oclmp(OCLManager& m, oclmp_t& a);
 
-        a.cl_buf = buf;
-    } else {
-        // if already allocated, update gpu memory
-        err = clEnqueueWriteBuffer(m.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
-
-    }
-
-}
-
-void fetch_oclmp(OCLManager& m, oclmp_t& a) {
-    cl_int err;
-
-    if (!a.cl_buf) {
-        throw std::invalid_argument("No gpu buffer associated");
-    }
-
-    clEnqueueReadBuffer(m.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
-}
-
-void clear_oclmp(OCLManager& m, oclmp_t& a) {
-    cl_int err;
-
-    if (!a.cl_buf) {
-        throw std::invalid_argument("No gpu buffer associated");
-    }
-    
-    delete[] a.data;
-
-    err = clReleaseMemObject(a.cl_buf);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to create oclmp buffer on GPU.");
-    }
-}
-
-void oclmp_bitwise_or(oclmp_context ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c) {
-    
-    cl_command_queue queue = clCreateCommandQueueWithProperties(ctx.ocl_manager.ctx, ctx.ocl_manager.dev, 0, nullptr);
-    cl_kernel kernel = ctx.getKernel("");
-
-    cl_int err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &a.cl_buf);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &b.cl_buf);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &c.cl_buf);
-
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to set kernel arguments.");
-    }
-
-    size_t global_work_size = c.size; 
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to enqueue kernel.");
-    }
-
-    clFinish(queue);
-}
+void oclmp_bitwise_or(oclmp_context ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c);
