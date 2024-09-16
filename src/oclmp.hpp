@@ -5,7 +5,7 @@
 #include "types.hpp"
 
 
-class OCLManager {
+class ocl_manager {
   public:
     cl_context ctx;
     cl_device_id dev;
@@ -14,7 +14,7 @@ class OCLManager {
 
     std::filesystem::path ocl_folder;
 
-    OCLManager(std::string ocl_folder) {
+    ocl_manager(std::string ocl_folder) {
         cl_int err;
 
         this->ocl_folder = ocl_folder;
@@ -46,13 +46,13 @@ class OCLManager {
     cl_program build_program(std::string filename);
 };
 
-struct oclmp_context {
-    OCLManager ocl_manager;
+struct oclmp_env {
+    ocl_manager ocl_manager;
     std::vector<cl_mem> buffers;
 
     cl_program bitwise_ops;
 
-    oclmp_context(std::string path) : ocl_manager(path) {
+    oclmp_env(std::string path) : ocl_manager(path) {
         bitwise_ops = ocl_manager.build_program("bitops.cl");
     }
 
@@ -71,10 +71,10 @@ struct oclmp_context {
     }
 };
 
-void load_oclmp(OCLManager& m, oclmp_t& a);
+void load_oclmp(oclmp_env& env, oclmp_t& a);
 
-void fetch_oclmp(OCLManager& m, oclmp_t& a);
+void fetch_oclmp(oclmp_env& env, oclmp_t& a);
 
-void clear_oclmp(OCLManager& m, oclmp_t& a);
+void clear_oclmp(oclmp_env& env, oclmp_t& a);
 
-void oclmp_bitwise_or(oclmp_context ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c);
+void oclmp_bitwise_or(oclmp_env ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c);

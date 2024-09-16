@@ -9,7 +9,7 @@ find_package(OpenCL REQUIRED)
 set(${GMP_INCLUDE_DIR} "/usr/include/x86_64-linux-gnu")
 
 add_library(OCLMP 
-    src/main.cpp
+    src/oclmp.cpp
     src/types.cpp
 )
 

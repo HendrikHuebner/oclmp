@@ -16,9 +16,6 @@ typedef struct oclmp {
     size_t size;
     cl_mem cl_buf = nullptr;
 
-    ~oclmp() {
-        delete[] data;
-    }
 } oclmp_t;
 
 
