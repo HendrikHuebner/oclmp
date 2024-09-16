@@ -35,18 +35,46 @@ struct oclmp_context {
 void load_oclmp(OCLManager& m, oclmp_t& a) {
     cl_int err;
 
-    if (a.cl_buf) {
-        throw std::invalid_argument("Oclmp buffer already created");
+    if (!a.cl_buf) {
+        cl_mem buf = clCreateBuffer(m.ctx, CL_MEM_READ_WRITE, 
+            (a.frac_size + a.int_size) * sizeof(b256int_t), a.data, &err);
+
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to create oclmp buffer on GPU.");
+        }
+
+        a.cl_buf = buf;
+    } else {
+        // if already allocated, update gpu memory
+        err = clEnqueueWriteBuffer(m.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
+
     }
 
-    cl_mem buf = clCreateBuffer(m.ctx, CL_MEM_USE_HOST_PTR | CL_MEM_READ_WRITE, 
-        (a.frac_size + a.int_size) * sizeof(b256int_t), a.data, &err);
+}
 
+void fetch_oclmp(OCLManager& m, oclmp_t& a) {
+    cl_int err;
+
+    if (!a.cl_buf) {
+        throw std::invalid_argument("No gpu buffer associated");
+    }
+
+    clEnqueueReadBuffer(m.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
+}
+
+void clear_oclmp(OCLManager& m, oclmp_t& a) {
+    cl_int err;
+
+    if (!a.cl_buf) {
+        throw std::invalid_argument("No gpu buffer associated");
+    }
+    
+    delete[] a.data;
+
+    err = clReleaseMemObject(a.cl_buf);
     if (err != CL_SUCCESS) {
         throw std::runtime_error("Failed to create oclmp buffer on GPU.");
     }
-
-    a.cl_buf = buf;
 }
 
 void oclmp_bitwise_or(oclmp_context ctx, oclmp_t& a, oclmp_t& b, oclmp_t& c) {

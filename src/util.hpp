@@ -4,7 +4,9 @@
 #include "types.hpp"
 #include <cstddef>
 #include <cstdio>
+#include <cstring>
 #include <random>
+#include <gmp.h>
 
 oclmp_t random_oclmp(size_t precision) {
     b256int_t* array = new b256int_t[precision];
@@ -35,4 +37,49 @@ void print_oclmp_t(const oclmp_t &num) {
         printf("%02x ", num.data[i]);
     }
     printf("\n");
+}
+
+static void ucharArrayToMpz(mpz_t& result, unsigned char* array, size_t size) {
+    mpz_import(result, size, -1, sizeof(unsigned char), 0, 0, array);
+}
+
+static void mpzToUcharArray(mpz_t& value, unsigned char* array, size_t size) {
+    size_t count;
+    mpz_export(array, &count, -1, sizeof(unsigned char), 0, 0, value);
+
+    if (count < size) {
+        std::memset(array + count, 0, size - count);
+    }
+}
+
+void oclmp_to_gmp(mpz_t& result, oclmp& mp) {
+    mpz_t int_part, frac_part;
+    mpz_init(int_part);
+    mpz_init(frac_part);
+
+    ucharArrayToMpz(int_part, mp.data, mp.int_size);
+    ucharArrayToMpz(frac_part, mp.data + mp.int_size, mp.frac_size);
+    mpz_tdiv_q_2exp(frac_part, frac_part, mp.frac_size * 8);
+
+    mpz_add(result, int_part, frac_part);
+
+    mpz_clear(int_part);
+    mpz_clear(frac_part);
+}
+
+void gmp_to_oclmp(mpz_t& value, oclmp& mp) {
+    mpz_t int_part, frac_part;
+    mpz_init(int_part);
+    mpz_init(frac_part);
+
+    mpz_fdiv_q_2exp(int_part, value, mp.frac_size * 8);
+    mpz_fdiv_r_2exp(frac_part, value, mp.frac_size * 8);
+
+    mpzToUcharArray(int_part, mp.data, mp.int_size);
+
+    mpz_mul_2exp(frac_part, frac_part, mp.frac_size * 8);
+    mpzToUcharArray(frac_part, mp.data + mp.int_size, mp.frac_size);
+
+    mpz_clear(int_part);
+    mpz_clear(frac_part);
 }

@@ -10,6 +10,7 @@ class OCLManager {
     cl_context ctx;
     cl_device_id dev;
     cl_platform_id platform;
+    cl_command_queue queue;
 
     std::filesystem::path ocl_folder;
 
@@ -34,6 +35,11 @@ class OCLManager {
         ctx = clCreateContext(nullptr, 1, &dev, nullptr, nullptr, &err);
         if (err != CL_SUCCESS) {
             throw std::runtime_error("Failed to create OpenCL context.");
+        }
+
+        queue = clCreateCommandQueueWithProperties(ctx, dev, 0, &err);
+        if (err != CL_SUCCESS) {
+            throw std::runtime_error("Failed to create OpenCL queue.");
         }
     }
 
