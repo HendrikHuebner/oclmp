@@ -26,9 +26,7 @@ TEST(OCLMPTest, BitwiseOrTest) {
     mpz_set_str(gmp_a, num1_str, 10);
     mpz_set_str(gmp_b, num2_str, 10);
     mpz_ior(gmp_c, gmp_a, gmp_b);
-    
-    gmp_printf ("gmp %Zd\n", gmp_c);
-    
+        
     oclmp d = alloc_oclmp(prec);
     gmp_to_oclmp(gmp_c, d);
 

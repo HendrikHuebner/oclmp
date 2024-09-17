@@ -1,4 +1,5 @@
 #include "oclmp.hpp"
+#include <CL/cl.h>
 #include <iostream>
 #include <stdexcept>
 #include "types.hpp"
@@ -41,8 +42,8 @@ void load_oclmp(oclmp_env& env, oclmp& a) {
     cl_int err;
 
     if (!a.cl_buf) {
-        cl_mem buf = clCreateBuffer(env.ocl_manager.ctx, CL_MEM_READ_WRITE, 
-            (a.frac_size + a.int_size) * sizeof(b256int_t), nullptr, &err);
+        cl_mem buf = clCreateBuffer(env.ocl_manager.ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+            (a.frac_size + a.int_size) * sizeof(b256int_t), a.data, &err);
 
         if (err != CL_SUCCESS) {
             printf("%d \n", err);
@@ -51,10 +52,13 @@ void load_oclmp(oclmp_env& env, oclmp& a) {
         }
 
         a.cl_buf = buf;
-    }
+        
+    } else {
 
     // if already allocated, update gpu memory
     err = clEnqueueWriteBuffer(env.ocl_manager.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
+    }
+
 }
 
 void fetch_oclmp(oclmp_env& env, oclmp& a) {
@@ -64,7 +68,8 @@ void fetch_oclmp(oclmp_env& env, oclmp& a) {
         throw std::invalid_argument("No gpu buffer associated");
     }
 
-    clEnqueueReadBuffer(env.ocl_manager.queue, a.cl_buf, true, 0, a.size, a.data, 0, nullptr, nullptr);
+    clEnqueueReadBuffer(env.ocl_manager.queue, a.cl_buf, CL_TRUE, 0, a.size * sizeof(unsigned char), a.data, 0, nullptr, nullptr);
+    clFinish(env.ocl_manager.queue);
 }
 
 void clear_oclmp(oclmp_env& env, oclmp& a) {
@@ -82,8 +87,7 @@ void clear_oclmp(oclmp_env& env, oclmp& a) {
 }
 
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
-    cl_command_queue queue = clCreateCommandQueueWithProperties(ctx.ocl_manager.ctx, ctx.ocl_manager.dev, 0, nullptr);
-    cl_kernel kernel = ctx.getKernel("");
+    cl_kernel kernel = ctx.getKernel("bitops", "oclmp_bitwise_or");
 
     cl_int err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &a.cl_buf);
     err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &b.cl_buf);
@@ -94,10 +98,32 @@ void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
     }
 
     size_t global_work_size = c.size; 
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
+    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
     if (err != CL_SUCCESS) {
         throw std::runtime_error("Failed to enqueue kernel.");
     }
 
-    clFinish(queue);
+    clFinish(ctx.ocl_manager.queue);
+}
+
+void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
+    cl_kernel kernel = ctx.getKernel("add_sub", "oclmp_add");
+
+    int n = a.size;
+    cl_int err = clSetKernelArg(kernel, 0, sizeof(int), &n);
+    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &a.cl_buf);
+    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &b.cl_buf);
+    err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &c.cl_buf);
+
+    if (err != CL_SUCCESS) {
+        throw std::runtime_error("Failed to set kernel arguments: Error: " + std::to_string(err));
+    }
+
+    size_t global_work_size = 1; 
+    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
+    if (err != CL_SUCCESS) {
+        throw std::runtime_error("Failed to enqueue kernel.");
+    }
+
+    clFinish(ctx.ocl_manager.queue);
 }

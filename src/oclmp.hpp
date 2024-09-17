@@ -2,6 +2,8 @@
 
 #include <CL/cl.h>
 #include <filesystem>
+#include <string>
+#include <unordered_map>
 #include "types.hpp"
 
 
@@ -48,25 +50,35 @@ class ocl_manager {
 
 struct oclmp_env {
     ocl_manager ocl_manager;
-    std::vector<cl_mem> buffers;
-
-    cl_program bitwise_ops;
+    std::unordered_map<std::string, cl_kernel> kernels;
+    std::unordered_map<std::string, cl_program> programs;
 
     oclmp_env(std::string path) : ocl_manager(path) {
-        bitwise_ops = ocl_manager.build_program("bitops.cl");
     }
 
     void close() {
-        for (auto buf : buffers) {
-            clReleaseMemObject(buf);
-        }
+        for (auto kernel : kernels) 
+            clReleaseKernel(kernel.second);
 
         clReleaseContext(ocl_manager.ctx);
         clReleaseDevice(ocl_manager.dev);
     }
 
-    cl_kernel getKernel(std::string name) {
-        cl_kernel kernel = clCreateKernel(bitwise_ops, "oclmp_bitwise_or", nullptr);
+    cl_program getProgram(std::string name) {
+        if (programs.find(name) != programs.end()) 
+            programs.at(name);
+
+        cl_program program = ocl_manager.build_program(name + ".cl");
+        programs[name] = program;
+        return program;
+    }
+
+    cl_kernel getKernel(std::string file, std::string name) {
+        if (kernels.find(name) != kernels.end()) 
+            kernels.at(name);
+
+        cl_kernel kernel = clCreateKernel(getProgram(file), name.c_str(), nullptr);
+        kernels[name] = kernel;
         return kernel;
     }
 };
@@ -78,3 +90,5 @@ void fetch_oclmp(oclmp_env& env, oclmp& a);
 void clear_oclmp(oclmp_env& env, oclmp& a);
 
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
+
+void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);

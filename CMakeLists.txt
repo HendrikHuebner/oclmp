@@ -11,6 +11,7 @@ set(${GMP_INCLUDE_DIR} "/usr/include/x86_64-linux-gnu")
 add_library(OCLMP 
     src/oclmp.cpp
     src/types.cpp
+    src/util.cpp
 )
 
 target_include_directories(OCLMP PRIVATE ${OpenCL_INCLUDE_DIRS} ${GMP_INCLUDE_DIR})
@@ -29,6 +30,7 @@ enable_testing()
 
 add_executable(oclmpests
     tests/test_ops.cpp
+    tests/test_add.cpp
 )
 
 target_link_libraries(oclmpests PRIVATE gtest gtest_main OCLMP)

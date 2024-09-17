@@ -25,5 +25,3 @@ oclmp parse_oclmp(std::string str, size_t precision);
 
 oclmp parse_oclmp(std::vector<unsigned char>& bytes);
 
-// Function to print the base-256 fixed-point number
-void print_oclmp(const oclmp &num);

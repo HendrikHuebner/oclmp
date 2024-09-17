@@ -3,6 +3,7 @@
 #include "types.hpp"
 #include "util.hpp"
 #include "oclmp.hpp"
+#include "test_util.hpp"
 
 TEST(OCLMPTest, AddTest) {
     const char* num1_str = "123456789";
@@ -19,22 +20,35 @@ TEST(OCLMPTest, AddTest) {
 
     mpz_set_str(gmp_a, num1_str, 10);
     mpz_set_str(gmp_b, num2_str, 10);
-    mpz_ior(gmp_c, gmp_a, gmp_b);
+    mpz_add(gmp_c, gmp_a, gmp_b);
     
-    gmp_printf ("gmp %Zd\n", gmp_c);
     oclmp d = alloc_oclmp(prec);
     gmp_to_oclmp(gmp_c, d);
 
     oclmp_env ctx("../src/opencl");
-    load_oclmp(ctx.ocl_manager, a);
-    load_oclmp(ctx.ocl_manager, b);
-    load_oclmp(ctx.ocl_manager, c);
 
-    oclmp_bitwise_or(ctx, a, b, c);
+    load_oclmp(ctx, a);
+    load_oclmp(ctx, b);
+    load_oclmp(ctx, c);
+    
+    print_oclmp(a);
+    print_oclmp(b);
+
+    oclmp_add(ctx, a, b, c);
+
+    fetch_oclmp(ctx, c);
+
     print_oclmp(c);
     print_oclmp(d);
+
+    EXPECT_OCLMP_EQ(c, d);
 
     mpz_clear(gmp_a);
     mpz_clear(gmp_b);
     mpz_clear(gmp_c);
+
+    clear_oclmp(ctx, a);
+    clear_oclmp(ctx, b);
+    clear_oclmp(ctx, c);
+    clear_oclmp(ctx, d);
 }
