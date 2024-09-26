@@ -53,8 +53,7 @@ struct oclmp_env {
     std::unordered_map<std::string, cl_kernel> kernels;
     std::unordered_map<std::string, cl_program> programs;
 
-    oclmp_env(std::string path) : ocl_manager(path) {
-    }
+    oclmp_env(std::string path) : ocl_manager(path) {}
 
     void close() {
         for (auto kernel : kernels) 
@@ -83,7 +82,11 @@ struct oclmp_env {
     }
 };
 
+void oclmp_run(oclmp_env& env);
+
 void load_oclmp(oclmp_env& env, oclmp& a);
+
+void load_oclmp(oclmp_env& env, oclmp* a, int n);
 
 void fetch_oclmp(oclmp_env& env, oclmp& a);
 
@@ -92,3 +95,7 @@ void clear_oclmp(oclmp_env& env, oclmp& a);
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 
 void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
+
+void oclmp_mul(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
+
+bool oclmp_cmp(oclmp_env ctx, oclmp& a);

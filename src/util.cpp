@@ -2,10 +2,13 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
+#include <iostream>
+#include <iterator>
+#include <ostream>
 #include <random>
 
 oclmp random_oclmp(size_t precision) {
-    b256int_t* array = new b256int_t[precision];
+    u8* array = new u8[precision];
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -48,16 +51,16 @@ static void mpzToUcharArray(mpz_t& value, unsigned char* array, size_t size) {
     }
 }
 
-void oclmpo_gmp(mpz_t& result, oclmp& mp) {
+void oclmp_to_gmp(mpz_t& result, oclmp& mp) {
     mpz_t int_part, frac_part;
     mpz_init(int_part);
     mpz_init(frac_part);
+    
+    ucharArrayToMpz(result, mp.data, mp.int_size);
+    //ucharArrayToMpz(frac_part, mp.data + mp.int_size, mp.frac_size);
+    //mpz_tdiv_q_2exp(frac_part, frac_part, mp.frac_size * 8);
 
-    ucharArrayToMpz(int_part, mp.data, mp.int_size);
-    ucharArrayToMpz(frac_part, mp.data + mp.int_size, mp.frac_size);
-    mpz_tdiv_q_2exp(frac_part, frac_part, mp.frac_size * 8);
-
-    mpz_add(result, int_part, frac_part);
+    //mpz_add(result, int_part, frac_part);
 
     mpz_clear(int_part);
     mpz_clear(frac_part);

@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(OpenCL REQUIRED)
+find_package(OpenMP REQUIRED)
+
 set(${GMP_INCLUDE_DIR} "/usr/include/x86_64-linux-gnu")
 
 add_library(OCLMP 
@@ -28,12 +30,16 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(oclmpests
+add_executable(oclmptests
     tests/test_ops.cpp
     tests/test_add.cpp
+    tests/test_mul.cpp
+    tests/perf/perf_test.cpp
 )
 
-target_link_libraries(oclmpests PRIVATE gtest gtest_main OCLMP)
-target_include_directories(oclmpests PUBLIC src)
+target_link_libraries(oclmptests PUBLIC OpenMP::OpenMP_CXX)
 
-add_test(NAME OCLMPTests COMMAND oclmpests)
+target_link_libraries(oclmptests PRIVATE gtest gtest_main OCLMP)
+target_include_directories(oclmptests PUBLIC src)
+
+add_test(NAME OCLMPTests COMMAND oclmptests)
