@@ -2,28 +2,24 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstring>
-#include <iostream>
-#include <iterator>
-#include <ostream>
 #include <random>
 
-oclmp random_oclmp(size_t precision) {
-    u8* array = new u8[precision];
-
+void random_oclmp(oclmp &n, size_t precision) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, 255);
+    
+    precision = std::min(precision, n.size);
 
-    for (size_t i = 0; i < precision; ++i) {
-        array[i] = static_cast<unsigned char>(distrib(gen));
+    for (size_t i = 0; i < precision; i++) {
+        n.data[i] = static_cast<u8>(distrib(gen));
     }
+}
 
-    return {
-        .data = array,
-        .int_size = precision,
-        .frac_size = 0,
-        .size = precision
-    };
+void random_oclmp_pool(oclmp_pool &ns, size_t precision) {
+    for (size_t i = 0; i < ns.size; i++) {
+        random_oclmp(ns[i], precision);
+    }
 }
 
 void print_oclmp(const oclmp &num) {
@@ -36,6 +32,12 @@ void print_oclmp(const oclmp &num) {
         printf("%02x ", num.data[i]);
     }
     printf("\n");
+}
+
+void print_oclmp_pool(oclmp_pool &ns) {
+    for (size_t i = 0; i < ns.size; i++) {
+        print_oclmp(ns[i]);
+    }
 }
 
 static void ucharArrayToMpz(mpz_t& result, unsigned char* array, size_t size) {

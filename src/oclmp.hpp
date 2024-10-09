@@ -1,6 +1,7 @@
 #pragma once
 
 #include <CL/cl.h>
+#include <cstddef>
 #include <filesystem>
 #include <string>
 #include <unordered_map>
@@ -82,20 +83,30 @@ struct oclmp_env {
     }
 };
 
+void oclmp_begin(oclmp_env& env, size_t count);
+
 void oclmp_run(oclmp_env& env);
 
-void load_oclmp(oclmp_env& env, oclmp& a);
+void oclmp_load(oclmp_env& env, oclmp_pool& a);
 
-void load_oclmp(oclmp_env& env, oclmp* a, int n);
-
-void fetch_oclmp(oclmp_env& env, oclmp& a);
-
-void clear_oclmp(oclmp_env& env, oclmp& a);
+void oclmp_fetch(oclmp_env& env, oclmp_pool& a);
 
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 
 void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 
+void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c);
+
 void oclmp_mul(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 
 bool oclmp_cmp(oclmp_env ctx, oclmp& a);
+
+inline void oclmp_set_ui(oclmp& n, unsigned int i) {};
+
+inline void oclmp_mod(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};
+
+inline void oclmp_abs(oclmp_env ctx, oclmp& a, oclmp& b) {};
+
+inline void oclmp_sub(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};
+
+inline void oclmp_gdc(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};

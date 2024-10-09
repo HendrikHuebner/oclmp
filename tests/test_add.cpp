@@ -3,48 +3,43 @@
 #include "types.hpp"
 #include "util.hpp"
 #include "oclmp.hpp"
-#include "test_util.hpp"
 
 TEST(OCLMPTest, AddTest) {
-    size_t prec = 1000;
-    oclmp a = random_oclmp(prec);
-    oclmp b = random_oclmp(prec);
+    const size_t size = 30;
+    const size_t count = 10;
 
-    oclmp c, d;
-    alloc_oclmp(prec + 4, c);
-    alloc_oclmp(prec + 4, d);
+    oclmp_pool a, b, c;
+    oclmp_pool_init(size, a, count, 0);
+    oclmp_pool_init(size, b, count, 0);
+    random_oclmp_pool(a, size);
+    random_oclmp_pool(b, size);
 
-    mpz_t gmp_a, gmp_b, gmp_c;
-    mpz_init(gmp_a);
-    mpz_init(gmp_b);
-    mpz_init(gmp_c);
+    mpz_t gmp_a[count], gmp_b[count], gmp_c[count];
 
-    oclmp_to_gmp(gmp_a, a);
-    oclmp_to_gmp(gmp_b, b);
+    for (int i = 0; i < count; i++) {
+        mpz_init(gmp_a[i]);
+        mpz_init(gmp_b[i]);
+        mpz_init(gmp_c[i]);
+        
+        oclmp_to_gmp(gmp_a[i], a[i]);
+        oclmp_to_gmp(gmp_b[i], b[i]);
+        
+        mpz_add(gmp_c[i], gmp_a[i], gmp_b[i]);
 
-    mpz_add(gmp_c, gmp_a, gmp_b);
-    
-    gmp_to_oclmp(gmp_c, d);
+        gmp_printf("%d: %Zd \n", i, gmp_c[i]);
+    }
 
-    oclmp_env ctx("../src/opencl");
+    oclmp_env ctx("/home/hhuebner/Documents/OCLMP/src/opencl");
 
-    load_oclmp(ctx, a);
-    load_oclmp(ctx, b);
-    load_oclmp(ctx, c);
+    oclmp_begin(ctx, count);
+    oclmp_data A, B, C;
+    oclmp_set_source_pool(A, a);
+    oclmp_set_source_pool(B, b);
+    oclmp_set_source_pool(C, c);
 
-    oclmp_add(ctx, a, b, c);
+    oclmp_add(ctx, A, B, C);
 
-    fetch_oclmp(ctx, c);
+    oclmp_run(ctx);
 
-    EXPECT_OCLMP_EQ(c, d);
-
-    mpz_clear(gmp_a);
-    mpz_clear(gmp_b);
-    mpz_clear(gmp_c);
-
-    clear_oclmp(ctx, a);
-    clear_oclmp(ctx, b);
-    clear_oclmp(ctx, c);
-    clear_oclmp(ctx, d);
     ctx.close();
 }

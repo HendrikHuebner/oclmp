@@ -31,35 +31,69 @@ static void add_digit(u8* result, size_t& len, u8 digit) {
     }
 }
 
-int alloc_oclmp(size_t precision, oclmp& n) {
-    u8* data = new u8[precision];
-
-    if (data == nullptr)
-        return -1;
-
-    n.data = data;
-    n.int_size = precision;
-    n.frac_size = 0;
-    n.size = precision;
-
-    return 0;
-}
-
 int alloc_oclmp_pool(size_t size, size_t count, oclmp_pool& ns) {
-    u8* data = new u8[size * count];
+    u8* data = new u8[size * count]();
 
     if (data == nullptr)
         return -1;
+
+    oclmp* oclmps = new oclmp[count];
+
+    for (int i = 0; i < count; i++) {
+        oclmps[i].data = &data[size * i];
+        oclmps[i].size = size;
+        oclmps[i].int_size = size;
+        oclmps[i].frac_size = 0;
+    }
 
     ns.count = count;
     ns.size = size;
     ns.data = data;
+    ns.oclmps = oclmps;
 
     return 0;
 }
 
+int oclmp_pool_init(size_t size, oclmp_pool& pool, std::vector<std::string> strs) {
+    int err = alloc_oclmp_pool(size, strs.size(), pool);
+    
+    if (err) 
+        return err;
 
-oclmp make_oclmp(size_t precision, std::string str) {    
+    for (int i = 0; i < pool.count; i++) {
+        oclmp_set(pool[i], strs[i]);
+    }
+
+    return 0;
+}
+
+int oclmp_pool_init(size_t size, oclmp_pool& pool, size_t count, unsigned int init) {
+    int err = alloc_oclmp_pool(size, count, pool);
+    
+    if (err) 
+        return err;
+
+    for (int i = 0; i < pool.count; i++) {
+        oclmp_set(pool[i], init);
+    }
+
+    return 0;
+}
+
+void oclmp_pool_clear(oclmp_pool& pool) {
+    delete[] pool.data;
+    delete[] pool.oclmps;
+}
+
+void oclmp_set_source_pool(oclmp_data& n, oclmp_pool& pool) {
+    static int id = 0;
+    n.id = id++;
+    n.src = &pool;
+}
+
+void oclmp_set(oclmp &n, std::string str) { 
+    if (n.size % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
+
     size_t b10_decimal_point = std::string::npos;
     u8* int_part = new u8[str.length()];
     u8* frac_part = new u8[str.length()];
@@ -87,79 +121,51 @@ oclmp make_oclmp(size_t precision, std::string str) {
         }
     }
 
-    u8* data = new u8[precision]();
-
     // Convert integer part to base-256
     size_t int_base256_len = 1;
     for (size_t i = 0; i < int_len; i++) {
-        multiply_by_10(data, int_base256_len);
-        add_digit(data, int_base256_len, int_part[i]);
+        multiply_by_10(n.data, int_base256_len);
+        add_digit(n.data, int_base256_len, int_part[i]);
     }
 
-    if (int_base256_len > precision) 
+    if (int_base256_len > n.size) 
         throw new std::invalid_argument("Integer part exceeds precision");
     
     // Convert fractional part to base-256
-    size_t max_frac_length = precision - int_base256_len;
+    size_t max_frac_length = n.size - int_base256_len;
     size_t frac_base256_len = 0;
     for (size_t i = 0; i < frac_len && frac_base256_len < max_frac_length; i++) {
-        multiply_by_10(data + int_base256_len, frac_base256_len);
-        add_digit(data + int_base256_len, frac_base256_len, frac_part[i]);
+        multiply_by_10(n.data + int_base256_len, frac_base256_len);
+        add_digit(n.data + int_base256_len, frac_base256_len, frac_part[i]);
     }
     
     delete[] int_part;
     delete[] frac_part;
-    
-    return {
-        .data = data,
-        .int_size = int_base256_len,
-        .frac_size = frac_base256_len,
-        .size = precision
-    };
 }
 
-oclmp make_oclmp(std::vector<uint8_t>& bytes) {
-    u8* data = new u8[bytes.size()]();
-    std::memcpy(data, bytes.data(), bytes.size());
+void oclmp_set(oclmp &n, const std::vector<uint8_t>& bytes) {
+    if (n.size % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
+    if (bytes.size() > n.size) throw std::invalid_argument("Vector size does not match oclmp size");
 
-    return {
-        .data = data,
-        .int_size = bytes.size(),
-        .frac_size = 0,
-        .size = bytes.size()
-    };
+    std::memcpy(n.data, bytes.data(), bytes.size());
+
 }
 
-oclmp make_oclmp(size_t precision, uint32_t i) {
-    if (precision < 4)
+void oclmp_set(oclmp &n, uint32_t i) {
+    if (n.size < 4)
         throw new std::invalid_argument("OCLMP size must be greater than 3 to hold uint32");
     
-    u8* data = new u8[precision]();
-    std::memset(data, 0, precision);
-    ((uint32_t *) data)[0] = i;
-
-
-    return {
-        .data = data,
-        .int_size = precision,
-        .frac_size = 0,
-        .size = precision
-    };
+    std::memset(n.data, 0, n.size);
+    ((uint32_t *) n.data)[0] = i;
 }
 
-oclmp make_oclmp(size_t precision, uint64_t i) {
+void oclmp_set(oclmp &n, uint64_t i) {
+    size_t precision = n.size;
+    if (precision % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
+
     if (precision < 8)
         throw new std::invalid_argument("OCLMP size must be greater than 7 to hold uint64");
     
-    u8* data = new u8[precision]();
-    std::memset(data, 0, precision);
-    ((uint64_t *) data)[0] = i;
-
-
-    return {
-        .data = data,
-        .int_size = precision,
-        .frac_size = 0,
-        .size = precision
-    };
+    std::memset(n.data, 0, precision);
+    ((uint64_t *) n.data)[0] = i;
 }

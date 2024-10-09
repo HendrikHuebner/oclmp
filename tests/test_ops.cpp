@@ -15,8 +15,8 @@ TEST(OCLMPTest, BitwiseOrTest) {
     const char* num2_str = "987655432";
     size_t prec = 4;
 
-    oclmp a = make_oclmp(prec, num1_str);
-    oclmp b = make_oclmp(prec, num2_str);
+    oclmp a = oclmp_set(prec, num1_str);
+    oclmp b = oclmp_set(prec, num2_str);
     oclmp c, d;
     alloc_oclmp(prec, c);
     alloc_oclmp(prec, d);

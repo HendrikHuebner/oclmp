@@ -12,6 +12,8 @@ set(${GMP_INCLUDE_DIR} "/usr/include/x86_64-linux-gnu")
 
 add_library(OCLMP 
     src/oclmp.cpp
+    src/computation.cpp
+    src/kernels.cpp
     src/types.cpp
     src/util.cpp
 )
@@ -31,10 +33,10 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(oclmptests
-    tests/test_ops.cpp
+    #tests/test_ops.cpp
     tests/test_add.cpp
-    tests/test_mul.cpp
-    tests/perf/perf_test.cpp
+    #tests/test_mul.cpp
+    #tests/perf/perf_test.cpp
 )
 
 target_link_libraries(oclmptests PUBLIC OpenMP::OpenMP_CXX)

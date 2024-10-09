@@ -3,7 +3,8 @@
 #include "types.hpp"
 #include <gmp.h>
 
-oclmp random_oclmp(size_t precision);
+void random_oclmp(oclmp &n, size_t precision);
+void random_oclmp_pool(oclmp_pool &ns, size_t precision);
 
 void print_oclmp(const oclmp &num);
 

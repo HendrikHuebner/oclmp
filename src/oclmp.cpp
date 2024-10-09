@@ -1,4 +1,5 @@
 #include "oclmp.hpp"
+#include "computation.hpp"
 #include <CL/cl.h>
 #include <cstddef>
 #include <iostream>
@@ -39,10 +40,23 @@ cl_program ocl_manager::build_program(std::string filename) {
     return program;
 }
 
-void oclmp_run(oclmp_env& env) {
+static std::unique_ptr<OclmpComputation> computation;
+
+void oclmp_begin(oclmp_env &env, size_t count) {
+    computation = std::make_unique<OclmpComputation>(count);
+}
+
+void oclmp_run(oclmp_env &env) {
+    computation->build(env);
     clFinish(env.ocl_manager.queue);
 }
 
+void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+    if (!computation)
+        throw std::runtime_error("Not currently in a OCLMP computation!");
+
+    computation->addAddition(a, b, c);
+}
 
 void load_oclmp(oclmp_env& env, oclmp* xs, int n) {
     cl_int err;
@@ -89,94 +103,3 @@ void fetch_oclmp(oclmp_env& env, oclmp& a) {
     clFinish(env.ocl_manager.queue);
 }
 
-void clear_oclmp(oclmp_env& env, oclmp& a) {
-
-    delete[] a.data;
-
-    if (!a.cl_buf) {
-        return;
-    }
-
-    cl_int err = clReleaseMemObject(a.cl_buf);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to release oclmp buffer.");
-    }
-}
-
-void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
-    cl_kernel kernel = ctx.getKernel("bitops", "oclmp_bitwise_or");
-
-    cl_int err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &a.cl_buf);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &b.cl_buf);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &c.cl_buf);
-
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to set kernel arguments.");
-    }
-
-    size_t global_work_size = c.size; 
-    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to enqueue kernel.");
-    }
-
-    clFinish(ctx.ocl_manager.queue);
-}
-
-void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
-    cl_kernel kernel = ctx.getKernel("add_sub", "oclmp_add");
-
-    int n = a.size;
-    cl_int err = clSetKernelArg(kernel, 0, sizeof(int), &n);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &a.cl_buf);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &b.cl_buf);
-    err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &c.cl_buf);
-
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to set kernel arguments: Error: " + std::to_string(err));
-    }
-
-    size_t global_work_size = 1; 
-    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, nullptr);
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to enqueue kernel.");
-    }
-}
-
-void oclmp_mul(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {
-    cl_kernel kernel = ctx.getKernel("mul", "oclmp_mul");
-    cl_kernel kernel_combine = ctx.getKernel("add_sub", "oclmp_combine");
-
-    int n = a.size;
-    cl_event evt;
-
-    cl_mem t = clCreateBuffer(ctx.ocl_manager.ctx, CL_MEM_READ_WRITE, c.size, nullptr, nullptr);
-    cl_int err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &a.cl_buf);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &b.cl_buf);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &c.cl_buf);
-    err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &t);
-
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to set kernel arguments: Error: " + std::to_string(err));
-    }
-
-    size_t global_work_size = (n + 1) / 2;
-    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, 0, nullptr, &evt);
-    
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to enqueue kernel.");
-    }
-
-    int m = n / 4;
-    err |= clSetKernelArg(kernel_combine, 0, sizeof(int), &m);
-    err |= clSetKernelArg(kernel_combine, 1, sizeof(cl_mem), &c.cl_buf);
-    err |= clSetKernelArg(kernel_combine, 2, sizeof(cl_mem), &t);
-    err |= clSetKernelArg(kernel_combine, 3, sizeof(cl_mem), &c.cl_buf);
-
-    if (err != CL_SUCCESS) {
-        throw std::runtime_error("Failed to set kernel_combine arguments: Error: " + std::to_string(err));
-    }
-
-    global_work_size = 1;
-    err = clEnqueueNDRangeKernel(ctx.ocl_manager.queue, kernel_combine, 1, nullptr, &global_work_size, nullptr, 1, &evt, nullptr);
-}
