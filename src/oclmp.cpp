@@ -58,48 +58,44 @@ void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
     computation->addAddition(a, b, c);
 }
 
-void load_oclmp(oclmp_env& env, oclmp* xs, int n) {
+struct sub_buffer_region {
+    size_t origin;
+    size_t size;
+};
+
+void oclmp_load_pool(oclmp_env& env, oclmp_pool& pool) {
     cl_int err;
-    for (int i = 0; i < n; i++) {
-        if (!xs[i].cl_buf) {
-            cl_mem buf = clCreateBuffer(env.ocl_manager.ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
-                (xs[i].frac_size + xs[i].int_size) * sizeof(u8), xs[i].data, &err);
+    cl_mem buf = clCreateBuffer(env.ocl_manager.ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+        pool.count * pool.size * sizeof(u8), pool.data, &err);
 
-            if (err != CL_SUCCESS) {
-                printf("%d \n", err);
-
-                throw std::runtime_error("Failed to create oclmp buffer on GPU.");
-            }
-
-            xs[i].cl_buf = buf;
-
-        } else {
-
-            // if already allocated, update gpu memory
-            err = clEnqueueWriteBuffer(env.ocl_manager.queue, xs[i].cl_buf, false, 0, xs[i].size, xs[i].data, 0, nullptr, nullptr);
-            if (err != CL_SUCCESS) {
-                printf("%d \n", err);
-
-                throw std::runtime_error("Failed to create enqueue write: Error " + std::to_string(err));
-            }
-        }
+    if (err != CL_SUCCESS) {
+        throw std::runtime_error("Failed to create oclmp buffer on GPU: Error " + std::to_string(err));
     }
+    
+    pool.cl_buf = buf;
+
+    /*
+    for (int i = 0; i < pool.count; i++) {
+        sub_buffer_region region = {
+            .origin = i * pool.size,
+            .size = pool.size
+        };
+
+        pool[i].cl_buf = clCreateSubBuffer(buf, CL_MEM_READ_WRITE,
+                                           CL_BUFFER_CREATE_TYPE_REGION, &region, &err);
+    } */
+    
 
     clFinish(env.ocl_manager.queue);
 }
 
-void load_oclmp(oclmp_env& env, oclmp& a) {
-    load_oclmp(env, &a, 1);
-}
-
-void fetch_oclmp(oclmp_env& env, oclmp& a) {
+void oclmp_fetch_pool(oclmp_env& env, oclmp_pool &pool) {
     cl_int err;
 
-    if (!a.cl_buf) {
+    if (!pool.cl_buf) {
         throw std::invalid_argument("No gpu buffer associated");
     }
 
-    clEnqueueReadBuffer(env.ocl_manager.queue, a.cl_buf, CL_TRUE, 0, a.size * sizeof(unsigned char), a.data, 0, nullptr, nullptr);
+    clEnqueueReadBuffer(env.ocl_manager.queue, pool.cl_buf, CL_TRUE, 0, pool.size * pool.count, pool.data, 0, nullptr, nullptr);
     clFinish(env.ocl_manager.queue);
 }
-

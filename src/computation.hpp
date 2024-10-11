@@ -6,6 +6,7 @@
 #include <optional>
 #include <vector>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -20,8 +21,11 @@ struct Operand {
 
     Operand(long id) : id(id) {}
 
-    virtual cl_mem mem() { return nullptr; };
-    virtual int size() { return 0; };
+    ~Operand() {}
+
+  public:
+    virtual cl_mem mem() = 0;
+    virtual int size() = 0;
 };
 
 struct DataSourceOperand : public Operand {
@@ -29,7 +33,10 @@ struct DataSourceOperand : public Operand {
     int _size;
 
     DataSourceOperand(oclmp_data data) : Operand(data.id), buf(data.src->cl_buf), _size(data.src->size) {}
+    
+    ~DataSourceOperand() {}
 
+  public:
     cl_mem mem() override {
         return buf;
     }
@@ -41,14 +48,14 @@ struct DataSourceOperand : public Operand {
 
 struct Instruction {
     InstructionType type;
-    Operand operand1;
-    Operand operand2;
-    optional<Operand> operand3;
+    std::unique_ptr<Operand> operand1;
+    std::unique_ptr<Operand> operand2;
+    std::unique_ptr<Operand> operand3;
 
     vector<shared_ptr<Instruction>> waitList;
 
-    Instruction(InstructionType t, Operand op1, Operand op2, optional<Operand> op3 = nullopt)
-        : type(t), operand1(op1), operand2(op2), operand3(op3) {}
+    Instruction(InstructionType t, std::unique_ptr<Operand> op1, std::unique_ptr<Operand> op2, std::unique_ptr<Operand> op3)
+        : type(t), operand1(std::move(op1)), operand2(std::move(op2)), operand3(std::move(op3)) {}
 };
 
 class OclmpComputation {
@@ -62,49 +69,23 @@ public:
     OclmpComputation(size_t count) : count(count) {}
     
     void addAddition(oclmp_data a, oclmp_data b, oclmp_data c) {
-        DataSourceOperand op1(c);
-        DataSourceOperand op2(a);
-        DataSourceOperand op3(b);
-        instructions.emplace_back(InstructionType::Add, op1, op2, optional<Operand>(op3));
+        std::unique_ptr<Operand> op1 = std::make_unique<DataSourceOperand>(c);
+        std::unique_ptr<Operand> op2 = std::make_unique<DataSourceOperand>(a);
+        std::unique_ptr<Operand> op3 = std::make_unique<DataSourceOperand>(b);
+
+        instructions.emplace_back(InstructionType::Add, std::move(op1), std::move(op2), std::move(op3));
     }
 
     void addMultiplication(oclmp_data a, oclmp_data b, oclmp_data c) {
-        DataSourceOperand op1(c);
-        DataSourceOperand op2(a);
-        DataSourceOperand op3(b);
-        instructions.emplace_back(InstructionType::Multiply, op1, op2, optional<Operand>(op3));
+        std::unique_ptr<Operand> op1 = std::make_unique<DataSourceOperand>(c);
+        std::unique_ptr<Operand> op2 = std::make_unique<DataSourceOperand>(a);
+        std::unique_ptr<Operand> op3 = std::make_unique<DataSourceOperand>(b);
+
+        instructions.emplace_back(InstructionType::Multiply, std::move(op1), std::move(op2), std::move(op3));
     }
 
     void build(oclmp_env env);
   
   protected:
     void instCombine();
-
-    // debug 
-
-    string operandToString(const Operand& operand) const {
-        return "";
-    }
-
-    string toString() const {
-        string result;
-        for (size_t i = 0; i < instructions.size(); ++i) {
-            const auto& instr = instructions[i];
-            result += "res" + to_string(i) + " = ";
-
-            switch (instr.type) {
-                case InstructionType::Add:
-                    result += operandToString(instr.operand1) + " Add " + operandToString(instr.operand2);
-                    break;
-                case InstructionType::Subtract:
-                    result += operandToString(instr.operand1) + " Sub " + operandToString(instr.operand2);
-                    break;
-                case InstructionType::Multiply:
-                    result += operandToString(instr.operand1) + " Mul " + operandToString(instr.operand2);
-                    break;
-            }
-            result += "\n";
-        }
-        return result;
-    }
 };

@@ -17,7 +17,7 @@ void random_oclmp(oclmp &n, size_t precision) {
 }
 
 void random_oclmp_pool(oclmp_pool &ns, size_t precision) {
-    for (size_t i = 0; i < ns.size; i++) {
+    for (size_t i = 0; i < ns.count; i++) {
         random_oclmp(ns[i], precision);
     }
 }
@@ -27,10 +27,10 @@ void print_oclmp(const oclmp &num) {
     for (ssize_t i = num.int_size - 1; i >= 0; i--) {
         printf("%02x ", num.data[i]);
     }
-    printf("\tFractional part: ");
+    /* printf("\tFractional part: ");
     for (ssize_t i = num.frac_size + num.int_size - 1; i >= num.int_size; i--) {
         printf("%02x ", num.data[i]);
-    }
+    } */
     printf("\n");
 }
 

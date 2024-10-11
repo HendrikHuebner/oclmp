@@ -3,6 +3,8 @@
 #include <cstring>
 #include <stdexcept>
 
+using size_t = std::size_t;
+
 static void multiply_by_10(u8* result, size_t& len) {
     unsigned short carry = 0;
     for (size_t i = 0; i < len; i++) {

@@ -87,9 +87,9 @@ void oclmp_begin(oclmp_env& env, size_t count);
 
 void oclmp_run(oclmp_env& env);
 
-void oclmp_load(oclmp_env& env, oclmp_pool& a);
+void oclmp_load_pool(oclmp_env& env, oclmp_pool& pool);
 
-void oclmp_fetch(oclmp_env& env, oclmp_pool& a);
+void oclmp_fetch_pool(oclmp_env& env, oclmp_pool& pool);
 
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 

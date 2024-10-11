@@ -95,6 +95,8 @@ cl_event oclmp_enqueue_add(
 
     err = clEnqueueNDRangeKernel(env.ocl_manager.queue, kernel, 1, nullptr, &global_work_size, nullptr, num_events, wait_events, &evt);
     
+    std::cout << num_events << " " << wait_events[0] << " " << wait_events[1] << " -> " << evt << std::endl;
+
     if (err != CL_SUCCESS) {
         throw std::runtime_error("Failed to enqueue kernel.");
     }
