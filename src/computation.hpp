@@ -3,10 +3,8 @@
 #include "oclmp.hpp"
 #include "types.hpp"
 #include <memory>
-#include <optional>
 #include <vector>
-#include <string>
-#include <iostream>
+
 
 using namespace std;
 
@@ -21,7 +19,7 @@ struct Operand {
 
     Operand(long id) : id(id) {}
 
-    ~Operand() {}
+    virtual ~Operand() {}
 
   public:
     virtual cl_mem mem() = 0;
@@ -57,6 +55,7 @@ struct Instruction {
     Instruction(InstructionType t, std::unique_ptr<Operand> op1, std::unique_ptr<Operand> op2, std::unique_ptr<Operand> op3)
         : type(t), operand1(std::move(op1)), operand2(std::move(op2)), operand3(std::move(op3)) {}
 };
+
 
 class OclmpComputation {
     vector<oclmp_data> data_sources;

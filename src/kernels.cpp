@@ -89,6 +89,7 @@ cl_event oclmp_enqueue_add(
     size_t global_work_size = count;
 
     cl_event wait_events[num_events];
+    
     for (int i = 0; i < num_events; i++) {
         wait_events[i] = *wait_list[i];
     }
