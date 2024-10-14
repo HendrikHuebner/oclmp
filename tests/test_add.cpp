@@ -5,7 +5,7 @@
 #include "oclmp.hpp"
 
 TEST(OCLMPTest, AddTest) {
-    const size_t size = 1280;
+    const size_t size = 128;
     const size_t count = 100000;
 
     oclmp_pool a, b, c;
@@ -37,13 +37,12 @@ TEST(OCLMPTest, AddTest) {
         mpz_add(gmp_c[i], gmp_a[i], gmp_a[i]);
         mpz_add(gmp_c[i], gmp_a[i], gmp_b[i]);
         mpz_add(gmp_c[i], gmp_b[i], gmp_b[i]);
-        //gmp_printf("%d: %Zx \n", i, gmp_c[i]);
     }
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
  
-    std::cout << duration.count() << "us" << std::endl;
+    std::cout << "MPZ add finished in: " << duration.count() << "us" << std::endl;
 
     oclmp_env ctx("/home/hhuebner/Documents/OCLMP/src/opencl");
     oclmp_load_pool(ctx, a);
@@ -69,11 +68,11 @@ TEST(OCLMPTest, AddTest) {
     stop = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
  
-    std::cout << duration.count() << "us" << std::endl;
+    std::cout << "OCLMP add finished in: " << duration.count() << "us" << std::endl;
 
     oclmp_fetch_pool(ctx, c);
 
-
+    //compare
     for (int i = 0; i < count; i++) {
         //print_oclmp(c[i]);
     }

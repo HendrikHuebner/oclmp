@@ -3,11 +3,13 @@ typedef unsigned long long u64;
 typedef unsigned int u32;
 typedef unsigned short u16;
 
-__kernel void oclmp_mul(__global const u16* A, __global const u16* B, 
+
+__kernel void oclmp_mul(__global const u16* A, __global const u16* B,
                         __global u32* C, __global u32* S) {
     int id = get_global_id(0);
     u64 sum = 0;
-    for (int i = 0; i <= id; i++) {        
+
+    for (int i = 0; i <= id; i++) {
         u16 b = ((u16*) B)[id];
         u16 a = ((u16*) A)[i];
         u32 p = (u32)a * (u32)b;
@@ -16,7 +18,6 @@ __kernel void oclmp_mul(__global const u16* A, __global const u16* B,
 
     ((u32*) S)[id] = (sum >> 32);
     ((u32*) C)[id] = (u32) sum;
-
     //printf("id %x, s %x, c %x \n", id, S[id], C[id]);
 }
 

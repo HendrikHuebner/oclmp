@@ -58,6 +58,13 @@ void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
     computation->addAddition(a, b, c);
 }
 
+void oclmp_mul(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+    if (!computation)
+        throw std::runtime_error("Not currently in a OCLMP computation!");
+
+    computation->addMultiplication(a, b, c);
+}
+
 struct sub_buffer_region {
     size_t origin;
     size_t size;

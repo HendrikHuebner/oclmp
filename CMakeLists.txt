@@ -35,7 +35,7 @@ enable_testing()
 add_executable(oclmptests
     #tests/test_ops.cpp
     tests/test_add.cpp
-    #tests/test_mul.cpp
+    tests/test_mul.cpp
     #tests/perf/perf_test.cpp
 )
 

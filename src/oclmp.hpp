@@ -93,11 +93,9 @@ void oclmp_fetch_pool(oclmp_env& env, oclmp_pool& pool);
 
 void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
 
-void oclmp_add(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
-
 void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c);
 
-void oclmp_mul(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
+void oclmp_mul(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c);
 
 bool oclmp_cmp(oclmp_env ctx, oclmp& a);
 
