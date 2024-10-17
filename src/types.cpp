@@ -1,5 +1,6 @@
 #include "types.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 
@@ -56,7 +57,7 @@ int alloc_oclmp_pool(size_t size, size_t count, oclmp_pool& ns) {
     return 0;
 }
 
-int oclmp_pool_init(size_t size, oclmp_pool& pool, std::vector<std::string> strs) {
+int oclmp_pool_init(size_t size, oclmp_pool& pool, const std::vector<std::string> &strs) {
     int err = alloc_oclmp_pool(size, strs.size(), pool);
     
     if (err) 
@@ -64,6 +65,19 @@ int oclmp_pool_init(size_t size, oclmp_pool& pool, std::vector<std::string> strs
 
     for (int i = 0; i < pool.count; i++) {
         oclmp_set(pool[i], strs[i]);
+    }
+
+    return 0;
+}
+
+int oclmp_pool_init(size_t size, oclmp_pool& pool, const std::vector<std::vector<uint8_t>>& bytes) {
+    int err = alloc_oclmp_pool(size, bytes.size(), pool);
+    
+    if (err) 
+        return err;
+
+    for (int i = 0; i < pool.count; i++) {
+        oclmp_set(pool[i], bytes[i]);
     }
 
     return 0;
@@ -88,12 +102,10 @@ void oclmp_pool_clear(oclmp_pool& pool) {
 }
 
 void oclmp_set_source_pool(oclmp_data& n, oclmp_pool& pool) {
-    static int id = 0;
-    n.id = id++;
     n.src = &pool;
 }
 
-void oclmp_set(oclmp &n, std::string str) { 
+void oclmp_set(oclmp_t&n, const std::string &str) { 
     if (n.size % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
 
     size_t b10_decimal_point = std::string::npos;
@@ -145,7 +157,7 @@ void oclmp_set(oclmp &n, std::string str) {
     delete[] frac_part;
 }
 
-void oclmp_set(oclmp &n, const std::vector<uint8_t>& bytes) {
+void oclmp_set(oclmp_t&n, const std::vector<uint8_t>& bytes) {
     if (n.size % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
     if (bytes.size() > n.size) throw std::invalid_argument("Vector size does not match oclmp size");
 
@@ -153,7 +165,7 @@ void oclmp_set(oclmp &n, const std::vector<uint8_t>& bytes) {
 
 }
 
-void oclmp_set(oclmp &n, uint32_t i) {
+void oclmp_set(oclmp_t&n, uint32_t i) {
     if (n.size < 4)
         throw new std::invalid_argument("OCLMP size must be greater than 3 to hold uint32");
     
@@ -161,7 +173,7 @@ void oclmp_set(oclmp &n, uint32_t i) {
     ((uint32_t *) n.data)[0] = i;
 }
 
-void oclmp_set(oclmp &n, uint64_t i) {
+void oclmp_set(oclmp_t&n, uint64_t i) {
     size_t precision = n.size;
     if (precision % 4 != 0) throw std::invalid_argument("Size must be multiple of 4 (for now)");
 

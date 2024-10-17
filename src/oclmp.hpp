@@ -50,25 +50,25 @@ class ocl_manager {
 };
 
 struct oclmp_env {
-    ocl_manager ocl_manager;
+    ocl_manager ocl;
     std::unordered_map<std::string, cl_kernel> kernels;
     std::unordered_map<std::string, cl_program> programs;
 
-    oclmp_env(std::string path) : ocl_manager(path) {}
+    oclmp_env(std::string path) : ocl(path) {}
 
     void close() {
         for (auto kernel : kernels) 
             clReleaseKernel(kernel.second);
 
-        clReleaseContext(ocl_manager.ctx);
-        clReleaseDevice(ocl_manager.dev);
+        clReleaseContext(ocl.ctx);
+        clReleaseDevice(ocl.dev);
     }
 
     cl_program getProgram(std::string name) {
         if (programs.find(name) != programs.end()) 
             programs.at(name);
 
-        cl_program program = ocl_manager.build_program(name + ".cl");
+        cl_program program = ocl.build_program(name + ".cl");
         programs[name] = program;
         return program;
     }
@@ -91,20 +91,23 @@ void oclmp_load_pool(oclmp_env& env, oclmp_pool& pool);
 
 void oclmp_fetch_pool(oclmp_env& env, oclmp_pool& pool);
 
-void oclmp_bitwise_or(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c);
+void oclmp_bitwise_or(oclmp_env env, oclmp_pool& a, oclmp_pool& b, oclmp_pool& c);
 
-void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c);
+void oclmp_add(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand& c);
 
-void oclmp_mul(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c);
+void oclmp_mul(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand& c);
 
-bool oclmp_cmp(oclmp_env ctx, oclmp& a);
+void oclmp_reduce(oclmp_env, oclmp_operand& a, oclmp_t& result);
 
-inline void oclmp_set_ui(oclmp& n, unsigned int i) {};
+// TODO:
+bool oclmp_cmp(oclmp_env env, oclmp_t& a);
 
-inline void oclmp_mod(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};
+inline void oclmp_set_ui(oclmp_t &n, unsigned int i) {};
 
-inline void oclmp_abs(oclmp_env ctx, oclmp& a, oclmp& b) {};
+inline void oclmp_mod(oclmp_env env, oclmp_t &a, oclmp_t &b, oclmp_t &c) {};
 
-inline void oclmp_sub(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};
+inline void oclmp_abs(oclmp_env env, oclmp_t &a, oclmp_t &b) {};
 
-inline void oclmp_gdc(oclmp_env ctx, oclmp& a, oclmp& b, oclmp& c) {};
+inline void oclmp_sub(oclmp_env env, oclmp_t &a, oclmp_t &b, oclmp_t &c) {};
+
+inline void oclmp_gdc(oclmp_env env, oclmp_t &a, oclmp_t &b, oclmp_t &c) {};

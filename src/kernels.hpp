@@ -1,5 +1,6 @@
 #pragma once
 
+#include "computation.hpp"
 #include "oclmp.hpp"
 #include <CL/cl.h>
 #include <cstddef>
@@ -12,6 +13,14 @@ cl_event oclmp_enqueue_mul(
         int num_events, cl_event **wait_list);
 
 cl_event oclmp_enqueue_add(
+        oclmp_env env, 
+        size_t count, 
+        size_t a, size_t b, size_t c, 
+        cl_mem A, cl_mem B, cl_mem C, 
+        int num_events, cl_event **wait_list);
+
+cl_event oclmp_enqueue_bitop(
+        InstructionType type,
         oclmp_env env, 
         size_t count, 
         size_t a, size_t b, size_t c, 

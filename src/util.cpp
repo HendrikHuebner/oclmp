@@ -4,7 +4,7 @@
 #include <cstring>
 #include <random>
 
-void random_oclmp(oclmp &n, size_t precision) {
+void random_oclmp(oclmp_t&n, size_t precision) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, 255);
@@ -22,7 +22,7 @@ void random_oclmp_pool(oclmp_pool &ns, size_t precision) {
     }
 }
 
-void print_oclmp(const oclmp &num) {
+void print_oclmp(const oclmp_t&num) {
     printf("Integer part: ");
     for (ssize_t i = num.int_size - 1; i >= 0; i--) {
         printf("%02x ", num.data[i]);
@@ -53,7 +53,7 @@ static void mpzToUcharArray(mpz_t& value, unsigned char* array, size_t size) {
     }
 }
 
-void oclmp_to_gmp(mpz_t& result, oclmp& mp) {
+void oclmp_to_gmp(mpz_t& result, oclmp_t &mp) {
     mpz_t int_part, frac_part;
     mpz_init(int_part);
     mpz_init(frac_part);
@@ -68,7 +68,7 @@ void oclmp_to_gmp(mpz_t& result, oclmp& mp) {
     mpz_clear(frac_part);
 }
 
-void gmp_to_oclmp(mpz_t& value, oclmp& mp) {
+void gmp_to_oclmp(mpz_t& value, oclmp_t &mp) {
     mpz_t int_part, frac_part;
     mpz_init(int_part);
     mpz_init(frac_part);

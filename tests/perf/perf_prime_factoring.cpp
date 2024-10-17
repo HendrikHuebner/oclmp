@@ -100,19 +100,19 @@ TEST(PerformanceTest, AddTest) {
         result.push_back(alloc_oclmp(prec));
     }
 
-    oclmp_env ctx("../src/opencl");
+    oclmp_env env("../src/opencl");
 
-    load_oclmp(ctx, values.data(), n);
-    load_oclmp(ctx, result.data(), n);
+    load_oclmp(env, values.data(), n);
+    load_oclmp(env, result.data(), n);
 
     // start of measurement
     auto start = std::chrono::high_resolution_clock::now();
     
     for (int i = 0; i < n; i++) {
-        oclmp_add(ctx, values[i], values[i], result[i]);
+        oclmp_add(env, values[i], values[i], result[i]);
     }
 
-    oclmp_run(ctx);
+    oclmp_run(env);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -124,8 +124,8 @@ TEST(PerformanceTest, AddTest) {
     // end of measurement
 
     for (int i = 0; i < n; i++) {
-        fetch_oclmp(ctx, result[i]);
-        clear_oclmp(ctx, values[i]);
+        fetch_oclmp(env, result[i]);
+        clear_oclmp(env, values[i]);
     }
 
 

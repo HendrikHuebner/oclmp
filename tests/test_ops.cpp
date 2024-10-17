@@ -15,9 +15,9 @@ TEST(OCLMPTest, BitwiseOrTest) {
     const char* num2_str = "987655432";
     size_t prec = 4;
 
-    oclmp a = oclmp_set(prec, num1_str);
-    oclmp b = oclmp_set(prec, num2_str);
-    oclmp c, d;
+    oclmp_ta = oclmp_set(prec, num1_str);
+    oclmp_tb = oclmp_set(prec, num2_str);
+    oclmp_tc, d;
     alloc_oclmp(prec, c);
     alloc_oclmp(prec, d);
 
@@ -31,13 +31,13 @@ TEST(OCLMPTest, BitwiseOrTest) {
         
     gmp_to_oclmp(gmp_c, d);
 
-    oclmp_env ctx("../src/opencl");
-    load_oclmp(ctx, a);
-    load_oclmp(ctx, b);
-    load_oclmp(ctx, c);
-    oclmp_bitwise_or(ctx, a, b, c);
+    oclmp_env env("../src/opencl");
+    load_oclmp(env, a);
+    load_oclmp(env, b);
+    load_oclmp(env, c);
+    oclmp_bitwise_or(env, a, b, c);
 
-    fetch_oclmp(ctx, c);
+    fetch_oclmp(env, c);
 
     EXPECT_OCLMP_EQ(c, d);
 
@@ -45,8 +45,8 @@ TEST(OCLMPTest, BitwiseOrTest) {
     mpz_clear(gmp_b);
     mpz_clear(gmp_c);
 
-    clear_oclmp(ctx, a);
-    clear_oclmp(ctx, b);
-    clear_oclmp(ctx, c);
-    clear_oclmp(ctx, d);
+    clear_oclmp(env, a);
+    clear_oclmp(env, b);
+    clear_oclmp(env, c);
+    clear_oclmp(env, d);
 }

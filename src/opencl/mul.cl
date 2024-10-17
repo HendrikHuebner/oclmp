@@ -8,7 +8,7 @@ __kernel void oclmp_mul(__global const u16* A, __global const u16* B,
                         __global u32* C, __global u32* S) {
     int id = get_global_id(0);
     u64 sum = 0;
-
+    
     for (int i = 0; i <= id; i++) {
         u16 b = ((u16*) B)[id];
         u16 a = ((u16*) A)[i];

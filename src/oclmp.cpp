@@ -48,21 +48,35 @@ void oclmp_begin(oclmp_env &env, size_t count) {
 
 void oclmp_run(oclmp_env &env) {
     computation->build(env);
-    clFinish(env.ocl_manager.queue);
+    clFinish(env.ocl.queue);
 }
 
-void oclmp_add(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+void oclmp_add(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand& c) {
     if (!computation)
         throw std::runtime_error("Not currently in a OCLMP computation!");
 
     computation->addAddition(a, b, c);
 }
 
-void oclmp_mul(oclmp_env ctx, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+void oclmp_mul(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand& c) {
     if (!computation)
         throw std::runtime_error("Not currently in a OCLMP computation!");
 
     computation->addMultiplication(a, b, c);
+}
+
+void oclmp_bitwise_or(oclmp_env env, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+    if (!computation)
+        throw std::runtime_error("Not currently in a OCLMP computation!");
+
+    computation->addBitwiseOr(a, b, c);
+}
+
+void oclmp_bitwise_and(oclmp_env env, oclmp_data& a, oclmp_data& b, oclmp_data& c) {
+    if (!computation)
+        throw std::runtime_error("Not currently in a OCLMP computation!");
+
+    computation->addBitwiseAnd(a, b, c);
 }
 
 struct sub_buffer_region {
@@ -72,8 +86,8 @@ struct sub_buffer_region {
 
 void oclmp_load_pool(oclmp_env& env, oclmp_pool& pool) {
     cl_int err;
-    cl_mem buf = clCreateBuffer(env.ocl_manager.ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
-        pool.count * pool.size * sizeof(u8), pool.data, &err);
+    cl_mem buf = clCreateBuffer(env.ocl.ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, 
+        pool.count * pool.size, pool.data, &err);
 
     if (err != CL_SUCCESS) {
         throw std::runtime_error("Failed to create oclmp buffer on GPU: Error " + std::to_string(err));
@@ -93,7 +107,7 @@ void oclmp_load_pool(oclmp_env& env, oclmp_pool& pool) {
     } */
     
 
-    clFinish(env.ocl_manager.queue);
+    clFinish(env.ocl.queue);
 }
 
 void oclmp_fetch_pool(oclmp_env& env, oclmp_pool &pool) {
@@ -103,6 +117,6 @@ void oclmp_fetch_pool(oclmp_env& env, oclmp_pool &pool) {
         throw std::invalid_argument("No gpu buffer associated");
     }
 
-    clEnqueueReadBuffer(env.ocl_manager.queue, pool.cl_buf, CL_TRUE, 0, pool.size * pool.count, pool.data, 0, nullptr, nullptr);
-    clFinish(env.ocl_manager.queue);
+    clEnqueueReadBuffer(env.ocl.queue, pool.cl_buf, CL_TRUE, 0, pool.size * pool.count, pool.data, 0, nullptr, nullptr);
+    clFinish(env.ocl.queue);
 }

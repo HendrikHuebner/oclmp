@@ -3,28 +3,34 @@ typedef unsigned long long  u64;
 typedef unsigned int        u32;
 typedef unsigned short      u16;
 
-__kernel void oclmp_add(const int n, __global const u8 const* A, __global const u8* B, 
-                        __global u8* C) {
+__kernel void oclmp_add(int n, int m, __global const u32* A, __global const u32* B, 
+                        __global u32* C) {
 
     int id = get_global_id(0);
+    u32 nMin = n < m ? n : m;
 
     A = &A[n * id];
     B = &B[n * id];
-    C = &C[(n + 4) * id];
-    int v = id | (id << 8) | (id << 16) | (id << 24);
+    C = &C[m * id];
 
     u32 carry = 0;
+    int i = 0;
     
-    for (int i = 0; i < (n >> 2); i++) {
-        u64 c = (u64)((u32*) A)[i] + ((u32*) B)[i] + carry;
+    for (; i < nMin; i++) {
+        u64 c = (u64) A[i] + B[i] + carry;
 
-        ((u32*) C)[i] = (u32) (c & 0xFFFFFFFF);
+        C[i] = (u32) (c & 0xFFFFFFFF);
         carry = (u32) (c >> 32ll);
     }
 
-    ((u32*) C)[n >> 2] = carry;
+    if (n < m) 
+        C[n] = carry;
+
+    for (i = n + 1; i < m; i++)
+        C[i] = 0;
 }
 
+/*
 __kernel void oclmp_add_n(const int n, __global const u8* __global* A, __global u8* C,  __global u32* S) {
     int id = get_global_id(0);
     int idx = id << 2;
@@ -52,3 +58,4 @@ __kernel void oclmp_combine(const int a, const int b, __global const u8* A,  __g
 
     ((u32*) C)[a] = carry;
 }
+*/

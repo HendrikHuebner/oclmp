@@ -3,15 +3,15 @@
 - [x] Bitwise operations (trivial)
 - [x] Addition using carry save 'trick'
 - [ ] Signed numbers
-- [ ] Basic multiplication
+- [x] Basic multiplication
 - [ ] Exponentiation (integer exponents)
-- [ ] Modular multiplication (montgomery algorithm?)
+- [ ] Modulo
 - [ ] Strassen-Schönhagen multiplication (if it's worth it?)
 
 - [ ] Performance evaluation against GMP with openMP
 - [ ] Performance evaluation against CGBN (nvidia)
 
-- [ ] Automatic operation scheduling using by finding data dependencies
+- [x] Automatic operation scheduling using by finding data dependencies
 
 # Notes
 
