@@ -40,7 +40,7 @@ int alloc_oclmp_pool(size_t size, size_t count, oclmp_pool& ns) {
     if (data == nullptr)
         return -1;
 
-    oclmp* oclmps = new oclmp[count];
+    oclmp_t* oclmps = new oclmp_t[count];
 
     for (int i = 0; i < count; i++) {
         oclmps[i].data = &data[size * i];

@@ -97,14 +97,17 @@ void oclmp_add(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand&
 
 void oclmp_mul(oclmp_env env, oclmp_operand& a, oclmp_operand& b, oclmp_operand& c);
 
-void oclmp_reduce(oclmp_env, oclmp_operand& a, oclmp_t& result);
-
 // TODO:
 bool oclmp_cmp(oclmp_env env, oclmp_t& a);
 
-inline void oclmp_set_ui(oclmp_t &n, unsigned int i) {};
+// Sets each oclmp_t in the provided pool to i
+inline void oclmp_set_ui(oclmp_data &pool, unsigned int i) {};
 
-inline void oclmp_mod(oclmp_env env, oclmp_t &a, oclmp_t &b, oclmp_t &c) {};
+// Calculates a mod b
+inline void oclmp_mod_ui(oclmp_env env, oclmp_t &a, unsigned int b, oclmp_t &c) {};
+
+// Sums up all values in an oclmp pool and saves the result to c
+inline void oclmp_reduce(oclmp_env env, oclmp_data &pool, oclmp_t &c) {};
 
 inline void oclmp_abs(oclmp_env env, oclmp_t &a, oclmp_t &b) {};
 

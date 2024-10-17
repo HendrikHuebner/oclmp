@@ -19,7 +19,6 @@ struct oclmp_t{
     size_t size;
     size_t int_size;
     size_t frac_size;
-    cl_mem cl_buf = nullptr;
     u8 *data;
 };
 

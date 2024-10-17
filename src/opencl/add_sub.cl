@@ -30,6 +30,35 @@ __kernel void oclmp_add(int n, int m, __global const u32* A, __global const u32*
         C[i] = 0;
 }
 
+__kernel void oclmp_reduce(const u32 count, const u32 N, __global const u32* pool, __global const u32* result) {
+    int id = get_global_id(0);
+    int lid = get_local_id(0);
+    int lsize = get_local_size(0);
+
+    __local u32 C[lsize];
+    __local u32 S[lsize];
+
+    u64 c = 0;
+    for (int i = id; i < count; i += N) {
+        c += pool[i];
+    }
+
+    C[lid] = (u32)c;
+    S[lid] = (u32)(c >> 32);
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+
+    u64 accumulator = 0;
+    if (lid == 0) {
+        for (int i = 0; i < lsize; i++) {
+            accumulator += c[i];
+        }
+    }
+
+    result[]
+
+}
+
 /*
 __kernel void oclmp_add_n(const int n, __global const u8* __global* A, __global u8* C,  __global u32* S) {
     int id = get_global_id(0);
